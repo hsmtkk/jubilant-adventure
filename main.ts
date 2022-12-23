@@ -35,11 +35,12 @@ class MyStack extends TerraformStack {
     });
 
     const sumServiceRunner = new google.serviceAccount.ServiceAccount(this, 'sumServiceRunner', {
-      accountId: 'sumServiceRunner',
+      accountId: 'sum-service-runner',
     });
 
     new google.cloudRunV2Service.CloudRunV2Service(this, 'sumService', {
-      name: 'sumService',
+      location: region,
+      name: 'sum-service',
       template: {
         containers: [{
           image: 'us-docker.pkg.dev/cloudrun/container/hello',
