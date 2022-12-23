@@ -60,6 +60,7 @@ class MyStack extends TerraformStack {
         serviceAccount: currencyServiceRunner.email,
       },
       traffic: [{
+        percent: 100,
         type: 'TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST',
       }],
     });
@@ -86,6 +87,7 @@ class MyStack extends TerraformStack {
         serviceAccount: sumServiceRunner.email,
       },
       traffic: [{
+        percent: 100,
         type: 'TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST',
       }],
     });
