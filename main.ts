@@ -58,6 +58,9 @@ class MyStack extends TerraformStack {
         },
         serviceAccount: sumServiceRunner.email,
       },
+      traffic: [{
+        type: 'TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST',
+      }],
     });
 
     new google.cloudRunServiceIamPolicy.CloudRunServiceIamPolicy(this, 'sumServicePublic', {
