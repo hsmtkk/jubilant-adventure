@@ -41,6 +41,29 @@ class MyStack extends TerraformStack {
       }],
     });
 
+    const currencyServiceRunner = new google.serviceAccount.ServiceAccount(this, 'sumServiceRunner', {
+      accountId: 'currency-service-runner',
+    });
+
+    const currencyService = new google.cloudRunV2Service.CloudRunV2Service(this, 'currencyService', {
+      ingress: 'INGRESS_TRAFFIC_INTERNAL_ONLY',
+      location: region,
+      name: 'currency-service',
+      template: {
+        containers: [{
+          image: 'us-docker.pkg.dev/cloudrun/container/hello',
+        }],
+        scaling: {
+          minInstanceCount: 0,
+          maxInstanceCount: 1,
+        },
+        serviceAccount: currencyServiceRunner.email,
+      },
+      traffic: [{
+        type: 'TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST',
+      }],
+    });
+
     const sumServiceRunner = new google.serviceAccount.ServiceAccount(this, 'sumServiceRunner', {
       accountId: 'sum-service-runner',
     });
@@ -50,6 +73,10 @@ class MyStack extends TerraformStack {
       name: 'sum-service',
       template: {
         containers: [{
+          env: [{
+            name: 'CURRENCY_SERVICE',
+            value: currencyService.uri,
+          }],
           image: 'us-docker.pkg.dev/cloudrun/container/hello',
         }],
         scaling: {

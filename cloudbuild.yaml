@@ -1,25 +1,46 @@
 ---
 steps:
   - name: gcr.io/kaniko-project/executor:latest
-    id: sumservice-docker
+    id: currency-service-docker
     waitFor:
       - "-"
     args:
       - --cache=true
       - --cache-ttl=168h
-      - --destination=${_REGION}-docker.pkg.dev/${PROJECT_ID}/registry/sumservice:${COMMIT_SHA}
+      - --destination=${_REGION}-docker.pkg.dev/${PROJECT_ID}/registry/currency-service:${COMMIT_SHA}
+      - --dockerfile=currencyservice/Dockerfile
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    id: currency-service-deploy
+    waitFor:
+      - currency-service-docker
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - currency-service
+      - --execution-environment=gen2
+      - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/registry/currency-service:${COMMIT_SHA}
+      - --region=${_REGION}
+  - name: gcr.io/kaniko-project/executor:latest
+    id: sum-service-docker
+    waitFor:
+      - "-"
+    args:
+      - --cache=true
+      - --cache-ttl=168h
+      - --destination=${_REGION}-docker.pkg.dev/${PROJECT_ID}/registry/sum-service:${COMMIT_SHA}
       - --dockerfile=sumservice/Dockerfile
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
-    id: sumservice-deploy
+    id: sum-service-deploy
     waitFor:
-      - sumservice-docker
+      - sum-service-docker
     entrypoint: gcloud
     args:
       - run
       - deploy
       - sum-service
       - --execution-environment=gen2
-      - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/registry/sumservice:${COMMIT_SHA}
+      - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/registry/sum-service:${COMMIT_SHA}
       - --region=${_REGION}
 substitutions:
   _REGION: us-central1
