@@ -8,6 +8,7 @@ steps:
       - --cache=true
       - --cache-ttl=168h
       - --destination=${_REGION}-docker.pkg.dev/${PROJECT_ID}/registry/sumservice:${COMMIT_SHA}
+      - --dockerfile=sumservice/Dockerfile
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
     id: sumservice-deploy
     waitFor:
