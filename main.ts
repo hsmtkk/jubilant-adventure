@@ -34,11 +34,18 @@ class MyStack extends TerraformStack {
       },
     });
 
+    const cloudRunPublic = new google.dataGoogleIamPolicy.DataGoogleIamPolicy(this, 'cloudRunPublic', {
+      binding: [{
+        members: ['allUsers'],
+        role: 'roles/run.invoker',
+      }],
+    });
+
     const sumServiceRunner = new google.serviceAccount.ServiceAccount(this, 'sumServiceRunner', {
       accountId: 'sum-service-runner',
     });
 
-    new google.cloudRunV2Service.CloudRunV2Service(this, 'sumService', {
+    const sumService = new google.cloudRunV2Service.CloudRunV2Service(this, 'sumService', {
       location: region,
       name: 'sum-service',
       template: {
@@ -51,6 +58,12 @@ class MyStack extends TerraformStack {
         },
         serviceAccount: sumServiceRunner.email,
       },
+    });
+
+    new google.cloudRunServiceIamPolicy.CloudRunServiceIamPolicy(this, 'sumServicePublic', {
+      location: region,
+      service: sumService.name,
+      policyData: cloudRunPublic.policyData,
     });
 
   }
