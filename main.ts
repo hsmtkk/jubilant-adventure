@@ -41,7 +41,7 @@ class MyStack extends TerraformStack {
       }],
     });
 
-    const currencyServiceRunner = new google.serviceAccount.ServiceAccount(this, 'sumServiceRunner', {
+    const currencyServiceRunner = new google.serviceAccount.ServiceAccount(this, 'currencyServiceRunner', {
       accountId: 'currency-service-runner',
     });
 
