@@ -46,7 +46,7 @@ class MyStack extends TerraformStack {
     });
 
     const currencyService = new google.cloudRunV2Service.CloudRunV2Service(this, 'currencyService', {
-      ingress: 'INGRESS_TRAFFIC_INTERNAL_ONLY',
+      ingress: 'INGRESS_TRAFFIC_ALL',
       location: region,
       name: 'currency-service',
       template: {
@@ -76,6 +76,7 @@ class MyStack extends TerraformStack {
     });
 
     const sumService = new google.cloudRunV2Service.CloudRunV2Service(this, 'sumService', {
+      ingress: 'INGRESS_TRAFFIC_ALL',
       location: region,
       name: 'sum-service',
       template: {
