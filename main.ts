@@ -69,11 +69,17 @@ class MyStack extends TerraformStack {
       accountId: 'sum-service-runner',
     });
 
-    new google.cloudRunServiceIamBinding.CloudRunServiceIamBinding(this, 'sumServiceRunnerToCurrencyService', {
+    const sumServiceAbleToInvokeCloudRun = new google.dataGoogleIamPolicy.DataGoogleIamPolicy(this, 'sumServiceAbleToInvokeCloudRun', {
+      binding: [{
+        members: [`serviceAccount:${sumServiceRunner.email}`],
+        role: 'roles/run.invoker',
+      }],
+    });
+
+    new google.cloudRunServiceIamPolicy.CloudRunServiceIamPolicy(this, 'sumServiceToCurrencyService', {
       location: region,
-      members: [`serviceAccount:${sumServiceRunner.email}`],
-      role: 'roles/run.invoker',
       service: currencyService.name,
+      policyData: sumServiceAbleToInvokeCloudRun.policyData,
     });
 
     const sumService = new google.cloudRunV2Service.CloudRunV2Service(this, 'sumService', {
