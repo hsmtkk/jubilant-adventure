@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 
@@ -27,6 +30,7 @@ func main() {
 	// Routes
 	e.GET("/", hello)
 	e.POST("/sum", sum)
+	e.POST("/sumcurrency", sumCurrency)
 
 	// Start server
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", port)))
@@ -55,4 +59,71 @@ func sum(ectx echo.Context) error {
 		result += n
 	}
 	return ectx.JSON(http.StatusOK, sumResponseSchema{Sum: result})
+}
+
+type sumCurrencyRequestSchema struct {
+	Amounts []string `json:"amounts"`
+}
+
+type sumCurrencyResponseSchema struct {
+	Sum int `json:"sum"`
+}
+
+func sumCurrency(ectx echo.Context) error {
+	req := new(sumCurrencyRequestSchema)
+	if err := ectx.Bind(req); err != nil {
+		return fmt.Errorf("echo.Context.Bind failed; %w", err)
+	}
+	sum, err := invokeCurrencyService(req.Amounts)
+	if err != nil {
+		return err
+	}
+	return ectx.JSON(http.StatusOK, sumCurrencyResponseSchema{Sum: sum})
+}
+
+type convertRequestSchema struct {
+	Value string `json:"value"`
+}
+
+type convertResponseSchema struct {
+	Answer int `json:"answer"`
+}
+
+func invokeCurrencyService(amounts []string) (int, error) {
+	url, err := env.RequiredVar("CURRENCY_SERVICE")
+	if err != nil {
+		return 0, err
+	}
+	url += "/convert"
+	sum := 0
+	for _, amount := range amounts {
+		reqBytes, err := json.Marshal(convertRequestSchema{
+			Value: amount,
+		})
+		if err != nil {
+			return 0, fmt.Errorf("json.Marshal failed; %w", err)
+		}
+		req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(reqBytes))
+		if err != nil {
+			return 0, fmt.Errorf("http.NewRequest failed; %w", err)
+		}
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return 0, fmt.Errorf("http.Client.Do failed; %w", err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			return 0, fmt.Errorf("non 200 HTTP response; %d; %s", resp.StatusCode, resp.Status)
+		}
+		respBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return 0, fmt.Errorf("io.ReadAll failed; %w", err)
+		}
+		var respSchema convertResponseSchema
+		if err := json.Unmarshal(respBytes, &respSchema); err != nil {
+			return 0, fmt.Errorf("json.Unmarshal failed; %w", err)
+		}
+		sum += respSchema.Answer
+	}
+	return sum, nil
 }
