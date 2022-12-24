@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"google.golang.org/api/idtoken"
 
 	"github.com/hsmtkk/jubilant-adventure/env"
 )
@@ -74,7 +76,7 @@ func sumCurrency(ectx echo.Context) error {
 	if err := ectx.Bind(req); err != nil {
 		return fmt.Errorf("echo.Context.Bind failed; %w", err)
 	}
-	sum, err := invokeCurrencyService(req.Amounts)
+	sum, err := invokeCurrencyService(ectx.Request().Context(), req.Amounts)
 	if err != nil {
 		return err
 	}
@@ -89,12 +91,16 @@ type convertResponseSchema struct {
 	Answer int `json:"answer"`
 }
 
-func invokeCurrencyService(amounts []string) (int, error) {
-	url, err := env.RequiredVar("CURRENCY_SERVICE")
+func invokeCurrencyService(ctx context.Context, amounts []string) (int, error) {
+	audience, err := env.RequiredVar("CURRENCY_SERVICE")
 	if err != nil {
 		return 0, err
 	}
-	url += "/convert"
+	url := audience + "/convert"
+	clt, err := idtoken.NewClient(ctx, audience)
+	if err != nil {
+		return 0, fmt.Errorf("idtoken.NewClient failed; %w", err)
+	}
 	sum := 0
 	for _, amount := range amounts {
 		reqBytes, err := json.Marshal(convertRequestSchema{
@@ -107,7 +113,7 @@ func invokeCurrencyService(amounts []string) (int, error) {
 		if err != nil {
 			return 0, fmt.Errorf("http.NewRequest failed; %w", err)
 		}
-		resp, err := http.DefaultClient.Do(req)
+		resp, err := clt.Do(req)
 		if err != nil {
 			return 0, fmt.Errorf("http.Client.Do failed; %w", err)
 		}
