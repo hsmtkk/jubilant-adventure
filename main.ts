@@ -65,21 +65,14 @@ class MyStack extends TerraformStack {
       }],
     });
 
-    const sumServiceRunner = new google.serviceAccount.ServiceAccount(this, 'sumServiceRunner', {
-      accountId: 'sum-service-runner',
-    });
-
-    const sumServiceAbleToInvokeCloudRun = new google.dataGoogleIamPolicy.DataGoogleIamPolicy(this, 'sumServiceAbleToInvokeCloudRun', {
-      binding: [{
-        members: [`serviceAccount:${sumServiceRunner.email}`],
-        role: 'roles/run.invoker',
-      }],
-    });
-
-    new google.cloudRunServiceIamPolicy.CloudRunServiceIamPolicy(this, 'sumServiceToCurrencyService', {
+    new google.cloudRunServiceIamPolicy.CloudRunServiceIamPolicy(this, 'currencyServicePublic', {
       location: region,
       service: currencyService.name,
-      policyData: sumServiceAbleToInvokeCloudRun.policyData,
+      policyData: cloudRunPublic.policyData,
+    });
+
+    const sumServiceRunner = new google.serviceAccount.ServiceAccount(this, 'sumServiceRunner', {
+      accountId: 'sum-service-runner',
     });
 
     const sumService = new google.cloudRunV2Service.CloudRunV2Service(this, 'sumService', {
