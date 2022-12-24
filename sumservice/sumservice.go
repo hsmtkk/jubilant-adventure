@@ -114,6 +114,7 @@ func invokeCurrencyService(ctx context.Context, amounts []string) (int, error) {
 		if err != nil {
 			return 0, fmt.Errorf("http.NewRequest failed; %w", err)
 		}
+		req.Header.Add("Content-Type", "application/json")
 		resp, err := clt.Do(req)
 		if err != nil {
 			return 0, fmt.Errorf("http.Client.Do failed; %w", err)
