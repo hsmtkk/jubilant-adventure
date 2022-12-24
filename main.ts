@@ -105,15 +105,6 @@ class MyStack extends TerraformStack {
       policyData: cloudRunPublic.policyData,
     });
 
-    new google.containerCluster.ContainerCluster(this, 'kubernetes', {
-      enableAutopilot: true,
-      location: region,
-      name: 'cluster',
-      nodeConfig: {
-        spot: true,
-      },
-    });
-
   }
 }
 
