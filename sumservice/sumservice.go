@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/http/httputil"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -118,6 +119,11 @@ func invokeCurrencyService(ctx context.Context, amounts []string) (int, error) {
 			return 0, fmt.Errorf("http.Client.Do failed; %w", err)
 		}
 		defer resp.Body.Close()
+		dumpResp, err := httputil.DumpResponse(resp, true)
+		if err != nil {
+			return 0, fmt.Errorf("httputil.DumpResponse failed; %w", err)
+		}
+		log.Println(string(dumpResp))
 		if resp.StatusCode != http.StatusOK {
 			return 0, fmt.Errorf("non 200 HTTP response; %d; %s", resp.StatusCode, resp.Status)
 		}
